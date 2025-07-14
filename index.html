@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking - 酒店预订</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=places"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .hotel-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .hotel-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .language-selector {
+            position: relative;
+        }
+        .language-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            min-width: 120px;
+        }
+        .language-selector:hover .language-dropdown {
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1001;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-blue-600">HotelBooking</h1>
+                </div>
+                
+                <!-- 语言选择器 -->
+                <div class="language-selector">
+                    <button class="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 rounded-md">
+                        <i class="fas fa-globe"></i>
+                        <span id="current-lang">English</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="language-dropdown">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="en">English</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="zh">中文</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ja">日本語</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ko">한국어</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ru">Русский</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 搜索栏 -->
+    <div class="bg-blue-600 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="destination">目的地</label>
+                        <input type="text" id="destination" value="东京国际论坛" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="checkin">入住</label>
+                        <input type="date" id="checkin" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="checkout">退房</label>
+                        <input type="date" id="checkout" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="guests">人数</label>
+                        <select id="guests" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                    <button id="search-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors" data-i18n="search">
+                        搜索酒店
+                    </button>
+                    <button id="map-toggle" class="text-blue-600 hover:text-blue-700 transition-colors" data-i18n="map-view">
+                        <i class="fas fa-map-marked-alt mr-2"></i>地图视图
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选和排序 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-gray-700" data-i18n="sort-by">排序方式:</span>
+                <select id="sort-select" class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                    <option value="distance" data-i18n="distance">距离</option>
+                    <option value="price" data-i18n="price">价格</option>
+                    <option value="rating" data-i18n="rating">评分</option>
+                </select>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-gray-700" data-i18n="filter">筛选:</span>
+                <button class="filter-btn bg-blue-600 text-white px-3 py-1 rounded-md text-sm" data-filter="all" data-i18n="all">全部</button>
+                <button class="filter-btn px-3 py-1 rounded-md text-sm" data-filter="budget" data-i18n="budget">经济型</button>
+                <button class="filter-btn px-3 py-1 rounded-md text-sm" data-filter="luxury" data-i18n="luxury">豪华型</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 酒店列表 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="hotels-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 酒店卡片将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <!-- 地图视图 -->
+    <div id="map-container" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div id="map" class="w-full h-96 rounded-lg shadow-lg"></div>
+    </div>
+
+    <!-- 底部菜单 -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="about">关于我们</h3>
+                    <p class="text-gray-600 text-sm" data-i18n="about-desc">专业的酒店预订平台，为您提供最优质的住宿体验。</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="support">客服支持</h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><a href="#" class="hover:text-blue-600" onclick="showSupportModal()" data-i18n="faq">常见问题</a></li>
+                        <li><a href="#" class="hover:text-blue-600" onclick="showSupportModal()" data-i18n="contact">联系我们</a></li>
+                        <li><a href="#" class="hover:text-blue-600" onclick="showSupportModal()" data-i18n="live-chat">在线客服</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="payment">支付方式</h3>
+                    <div class="flex space-x-2">
+                        <i class="fab fa-cc-visa text-2xl text-blue-600"></i>
+                        <i class="fab fa-cc-mastercard text-2xl text-red-600"></i>
+                        <i class="fab fa-bitcoin text-2xl text-orange-600"></i>
+                        <i class="fab fa-ethereum text-2xl text-purple-600"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="connect">连接钱包</h3>
+                    <button id="connect-wallet" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors" data-i18n="connect-wallet">
+                        连接MetaMask
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 预订模态框 -->
+    <div id="booking-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold" data-i18n="book-now">立即预订</h2>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modal-content">
+                <!-- 模态框内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 客服模态框 -->
+    <div id="support-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold" data-i18n="customer-service">客服支持</h2>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold mb-2" data-i18n="faq">常见问题</h3>
+                    <div class="space-y-2">
+                        <div class="border-b pb-2">
+                            <h4 class="font-medium" data-i18n="faq-cancel">如何取消预订？</h4>
+                            <p class="text-sm text-gray-600" data-i18n="faq-cancel-answer">您可以在入住前24小时取消预订。</p>
+                        </div>
+                        <div class="border-b pb-2">
+                            <h4 class="font-medium" data-i18n="faq-payment">支持哪些支付方式？</h4>
+                            <p class="text-sm text-gray-600" data-i18n="faq-payment-answer">支持信用卡、USDT、ETH、BTC等多种支付方式。</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2" data-i18n="live-chat">在线客服</h3>
+                    <div class="bg-gray-100 p-4 rounded-md">
+                        <p class="text-sm text-gray-600" data-i18n="chat-placeholder">正在连接客服，请稍候...</p>
+                        <div class="loading mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

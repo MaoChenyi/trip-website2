@@ -1,0 +1,35 @@
+{
+  "name": "hotel-booking-app",
+  "version": "1.0.0",
+  "description": "A multi-language hotel booking platform inspired by Trip.com with Web3 integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "./start.sh",
+    "dev": "python3 -m http.server 8000",
+    "serve": "npx serve . -p 3000"
+  },
+  "keywords": [
+    "hotel-booking",
+    "travel",
+    "web3",
+    "multilingual",
+    "responsive",
+    "google-maps",
+    "metamask"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/hotel-booking-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/hotel-booking-app/issues"
+  },
+  "homepage": "https://github.com/yourusername/hotel-booking-app#readme",
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 
