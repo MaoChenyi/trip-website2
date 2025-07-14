@@ -46,7 +46,7 @@ temp/
 
 # API密钥（如果有的话）
 config.js
-secrets.js
+secrets.json
 
 # 其他
 *.tgz
