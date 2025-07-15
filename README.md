@@ -245,3 +245,53 @@ MIT License
 ## 🗄️ 数据库设计
 
 本项目的MySQL数据库结构及示例数据请见：[docs/db_schema.sql](./docs/db_schema.sql) 
+
+## 🖥️ 后端服务说明
+
+本项目后端基于 Node.js + Express + MySQL 实现，支持用户注册/登录、酒店/机票预订、支付、评论、收藏等功能，并集成了自动化接口文档。
+
+### 目录结构
+
+```
+backend/
+├── app.js
+├── db.js
+├── swagger.js
+├── .env.example
+├── package.json
+├── middlewares/
+│   └── auth.js
+├── routes/
+│   ├── users.js
+│   ├── orders.js
+│   ├── payments.js
+│   ├── comments.js
+│   └── favorites.js
+├── controllers/
+│   ├── usersController.js
+│   ├── ordersController.js
+│   ├── paymentsController.js
+│   ├── commentsController.js
+│   └── favoritesController.js
+```
+
+### 启动方法
+
+1. 进入 backend 目录，安装依赖：
+   ```bash
+   cd backend
+   npm install
+   ```
+2. 复制 .env.example 为 .env 并配置数据库信息：
+   ```bash
+   cp .env.example .env
+   # 编辑 .env 填写数据库账号密码等
+   ```
+3. 启动服务：
+   ```bash
+   npm start
+   ```
+
+### 接口文档入口
+
+后端服务启动后，访问 [http://localhost:3000/api-docs](http://localhost:3000/api-docs) 可查看自动生成的 Swagger/OpenAPI 接口文档，包含所有接口、参数、返回结构示例。 
