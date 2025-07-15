@@ -241,3 +241,7 @@ MIT License
 ---
 
 **注意**: 这是一个演示项目，使用了模拟数据。在实际部署时，需要集成真实的酒店API和支付网关。 
+
+## 🗄️ 数据库设计
+
+本项目的MySQL数据库结构及示例数据请见：[docs/db_schema.sql](./docs/db_schema.sql) 
