@@ -1,16 +1,14 @@
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
+module.exports = function (req, res, next) {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).json({ error: '未提供Token' });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
+  try {
+    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET || 'secret');
+    req.user = decoded;
     next();
-  });
-}
-
-module.exports = authenticateToken; 
+  } catch (err) {
+    return res.status(401).json({ error: 'Token无效或已过期' });
+  }
+};
