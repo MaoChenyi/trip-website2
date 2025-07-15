@@ -2,6 +2,16 @@ const swaggerJSDoc = require('swagger-jsdoc');
 
 const options = {
   definition: {
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    },
+    security: [{ bearerAuth: [] }]
     openapi: '3.0.0',
     info: {
       title: 'Hotel Booking API',
